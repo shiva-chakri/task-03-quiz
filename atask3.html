@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Responsive Web Dev Quiz</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f9;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .quiz-container {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 700px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+    h2 {
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    .description {
+      font-size: 14px;
+      margin-bottom: 20px;
+      text-align: center;
+      color: #555;
+    }
+    .timer {
+      text-align: center;
+      font-weight: bold;
+      margin-bottom: 15px;
+      color: #d9534f;
+    }
+    .question {
+      margin-bottom: 15px;
+      font-weight: bold;
+    }
+    .options {
+      list-style: none;
+      padding: 0;
+    }
+    .options li {
+      margin: 8px 0;
+    }
+    button {
+      margin-top: 15px;
+      padding: 10px 15px;
+      background: #4CAF50;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+      width: 100%;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    .result {
+      margin-top: 20px;
+      font-size: 18px;
+      text-align: center;
+      font-weight: bold;
+    }
+    .answer-key {
+      margin-top: 20px;
+      font-size: 14px;
+      color: #333;
+    }
+    @media (min-width: 768px) {
+      body { font-size: 16px; }
+      .quiz-container { padding: 30px; }
+    }
+    @media (min-width: 1024px) {
+      body { font-size: 18px; }
+      .quiz-container { padding: 40px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="quiz-container">
+    <h2>HTML, CSS & JS Quiz</h2>
+    <div class="description">
+      Test your knowledge of web development basics. You have <strong>5 minutes</strong> to complete the quiz. Good luck!
+    </div>
+    <div id="timer" class="timer">Time Left: 300s</div>
+    <div id="quiz"></div>
+    <button id="nextBtn">Next</button>
+    <div id="result" class="result"></div>
+    <div id="answerKey" class="answer-key"></div>
+  </div>
+
+  <script>
+    const quizData = [
+      { number: 1, question: "Which tag creates a hyperlink in HTML?", options: ["a) link", "b) a", "c) href", "d) p"], answer: "b) a" },
+      { number: 2, question: "Which CSS property changes text color?", options: ["a) font-style", "b) color", "c) background-color", "d) text-align"], answer: "b) color" },
+      { number: 3, question: "Which keyword declares a variable in JavaScript?", options: ["a) var", "b) let", "c) const", "d) All of the above"], answer: "d) All of the above" },
+      { number: 4, question: "Which HTML tag is used for inserting an image?", options: ["a) img", "b) image", "c) src", "d) pic"], answer: "a) img" },
+      { number: 5, question: "Which CSS unit is relative to the root element?", options: ["a) em", "b) rem", "c) %", "d) px"], answer: "b) rem" },
+      { number: 6, question: "Which method selects an element by ID in JavaScript?", options: ["a) getElementById()", "b) querySelector()", "c) getElementsByClassName()", "d) getElementByTagName()"], answer: "a) getElementById()" },
+      { number: 7, question: "Which HTML tag is used for creating a table row?", options: ["a) tr", "b) td", "c) th", "d) row"], answer: "a) tr" },
+      { number: 8, question: "Which CSS property controls the size of text?", options: ["a) font-size", "b) text-size", "c) size", "d) font-style"], answer: "a) font-size" },
+      { number: 9, question: "Which JavaScript operator is used for strict equality?", options: ["a) ==", "b) ===", "c) !=", "d) ="], answer: "b) ===" },
+      { number: 10, question: "What is the full form of HTML?", options: ["a) HyperText Markup Language", "b) HyperTransfer Markup Language", "c) HyperText Making Language", "d) HyperTransfer Making Language"], answer: "a) HyperText Markup Language" }
+    ];
+
+    let currentQuestion = 0;
+    let score = 0;
+    let timeLeft = 300; // 5 minutes in seconds
+    let timerInterval;
+
+    const quizEl = document.getElementById("quiz");
+    const nextBtn = document.getElementById("nextBtn");
+    const resultEl = document.getElementById("result");
+    const timerEl = document.getElementById("timer");
+    const answerKeyEl = document.getElementById("answerKey");
+
+    function loadQuestion() {
+      const q = quizData[currentQuestion];
+      quizEl.innerHTML = `
+        <div class="question">${q.number}. ${q.question}</div>
+        <ul class="options">
+          ${q.options.map(opt => 
+            `<li><label><input type="radio" name="option" value="${opt}"> ${opt}</label></li>`
+          ).join("")}
+        </ul>
+      `;
+    }
+
+    function checkAnswer() {
+      const selected = document.querySelector('input[name="option"]:checked');
+      if (selected) {
+        if (selected.value === quizData[currentQuestion].answer) {
+          score++;
+        }
+        currentQuestion++;
+        if (currentQuestion < quizData.length) {
+          loadQuestion();
+        } else {
+          endQuiz();
+        }
+      } else {
+        alert("Please select an option!");
+      }
+    }
+
+    function endQuiz() {
+      quizEl.innerHTML = "";
+      nextBtn.style.display = "none";
+      resultEl.innerText = `You scored ${score} out of ${quizData.length}!`;
+      clearInterval(timerInterval);
+
+      // Show answer key
+      let keyHTML = "<h3>Answer Key:</h3><ol>";
+      quizData.forEach((q) => {
+        keyHTML += `<li>${q.number}. ${q.question} — <strong>${q.answer}</strong></li>`;
+      });
+      keyHTML += "</ol>";
+      answerKeyEl.innerHTML = keyHTML;
+    }
+
+    function startTimer() {
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        timerEl.innerText = `Time Left: ${timeLeft}s`;
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          endQuiz();
+          resultEl.innerText += " (Time's up!)";
+        }
+      }, 1000);
+    }
+
+    nextBtn.addEventListener("click", checkAnswer);
+
+    loadQuestion();
+    startTimer();
+  </script>
+</body>
+</html>
